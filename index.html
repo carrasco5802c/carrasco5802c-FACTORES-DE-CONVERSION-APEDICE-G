@@ -1,0 +1,319 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ConvertiSI - Factores de conversión</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f1f5fa;color:#1c2938;margin:0}
+header{background:linear-gradient(120deg,#112b49,#245b91);color:white;padding:25px}
+header h1{margin:0 0 10px}
+header p{margin:6px 0;color:#e0ebf8}
+main{max-width:1000px;margin:24px auto;padding:0 16px}
+.panel{background:white;padding:20px;border-radius:12px;margin-bottom:18px;box-shadow:0 3px 12px #17385b0c}
+select,input,button{padding:12px;border-radius:7px;border:1px solid #ccd6e2;font-size:15px}
+input,select{width:100%;box-sizing:border-box;margin:7px 0 15px}
+button{cursor:pointer;background:#15365b;color:white}
+button:hover{opacity:.88}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.categorias{display:flex;gap:8px;flex-wrap:wrap}
+.categorias button{background:#e6eef8;color:#15365b}
+.resultado{background:#e8f6f1;padding:20px;border-radius:9px;margin-top:15px}
+#valor{font-size:30px;font-weight:bold;color:#087e69;overflow-wrap:anywhere}
+table{border-collapse:collapse;width:100%}
+td,th{padding:10px;border-bottom:1px solid #ddd;text-align:left}
+.tabla{overflow-x:auto}
+footer{text-align:center;color:#64758a;padding:20px;font-size:13px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}header h1{font-size:24px}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ConvertiSI</h1>
+  <p><strong>Factores de conversión — Apéndice G</strong></p>
+  <p>Sistema Internacional (SI) y sistema inglés</p>
+  <hr style="border-color:#ffffff55">
+  <p><strong>1A Ing. Informartica - Juan Pablo Carrasco Ruiz</strong></p>
+</header>
+
+<main>
+<section class="panel">
+  <h2>Magnitud física</h2>
+  <div id="categorias" class="categorias"></div>
+</section>
+
+<section class="panel">
+  <h2 id="titulo">Conversor de unidades</h2>
+
+  <label for="cantidad">Cantidad a convertir</label>
+  <input id="cantidad" type="number" value="1" step="any">
+
+  <div class="grid">
+    <div>
+      <label for="origen">Unidad de origen</label>
+      <select id="origen"></select>
+    </div>
+    <div>
+      <label for="destino">Unidad de destino</label>
+      <select id="destino"></select>
+    </div>
+  </div>
+
+  <button id="swap">⇄ Intercambiar unidades</button>
+  <button id="convertir">Convertir</button>
+
+  <div class="resultado" aria-live="polite">
+    <p><strong>RESULTADO DE LA CONVERSIÓN</strong></p>
+    <div id="valor">0</div>
+    <p id="unidad"></p>
+    <p id="formula"></p>
+    <p>Factor de conversión: <strong id="factor"></strong></p>
+  </div>
+
+  <p>
+    <button id="copiar">Copiar resultado</button>
+    <button id="limpiar">Restablecer</button>
+  </p>
+</section>
+
+<section class="panel">
+  <h2>Tabla de equivalencias</h2>
+  <div class="tabla">
+    <table>
+      <thead>
+        <tr>
+          <th>Unidad</th>
+          <th>Símbolo</th>
+          <th>Equivalencia en unidad base</th>
+        </tr>
+      </thead>
+      <tbody id="tabla"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Información del software</h2>
+  <p>ConvertiSI permite realizar conversiones entre unidades del Sistema Internacional y del sistema inglés, utilizando factores de conversión de referencia del Apéndice G.</p>
+  <p><strong>Autor:</strong> Juan Pablo Carrasco Ruiz</p>
+  <p><strong>Grupo:</strong> 1A Ing. Informartica</p>
+  <p><strong>Tecnologías:</strong> HTML, CSS y JavaScript.</p>
+</section>
+</main>
+
+<footer>
+  ConvertiSI · Proyecto académico · Apéndice G
+</footer>
+
+<script>
+"use strict";
+
+const D = {
+"Longitud":{base:"m",u:[
+["Metro","m",1],["Centímetro","cm",.01],["Milímetro","mm",.001],
+["Kilómetro","km",1000],["Pulgada","in",.0254],["Pie","ft",.3048],
+["Yarda","yd",.9144],["Milla","mi",1609.344],["Milla náutica","nmi",1852]
+]},
+"Área":{base:"m²",u:[
+["Metro cuadrado","m²",1],["Centímetro cuadrado","cm²",1e-4],
+["Pie cuadrado","ft²",.09290304],["Pulgada cuadrada","in²",.00064516],
+["Hectárea","ha",10000],["Acre","acre",4046.8564224],
+["Kilómetro cuadrado","km²",1e6]
+]},
+"Volumen":{base:"m³",u:[
+["Metro cúbico","m³",1],["Centímetro cúbico","cm³",1e-6],
+["Litro","L",.001],["Mililitro","mL",1e-6],
+["Pie cúbico","ft³",.028316846592],["Pulgada cúbica","in³",1.6387064e-5],
+["Galón estadounidense","gal US",.003785411784],
+["Galón imperial","gal imp",.00454609]
+]},
+"Masa":{base:"kg",u:[
+["Kilogramo","kg",1],["Gramo","g",.001],["Miligramo","mg",1e-6],
+["Tonelada métrica","t",1000],["Libra","lb",.45359237],
+["Onza","oz",.028349523125],["Slug","slug",14.59390294],
+["Tonelada corta estadounidense","ton US",907.18474]
+]},
+"Densidad":{base:"kg/m³",u:[
+["Kilogramo por metro cúbico","kg/m³",1],
+["Gramo por centímetro cúbico","g/cm³",1000],
+["Slug por pie cúbico","slug/ft³",515.3788],
+["Libra por pie cúbico","lb/ft³",16.01846],
+["Libra por pulgada cúbica","lb/in³",27679.9]
+]},
+"Tiempo":{base:"s",u:[
+["Segundo","s",1],["Minuto","min",60],["Hora","h",3600],
+["Día","d",86400],["Año juliano","año",31557600],
+["Milisegundo","ms",.001],["Semana","sem",604800]
+]},
+"Velocidad":{base:"m/s",u:[
+["Metro por segundo","m/s",1],["Kilómetro por hora","km/h",1/3.6],
+["Pie por segundo","ft/s",.3048],["Milla por hora","mi/h",.44704],
+["Centímetro por segundo","cm/s",.01],["Nudo","kn",1852/3600]
+]},
+"Fuerza":{base:"N",u:[
+["Newton","N",1],["Dina","dyn",1e-5],
+["Libra-fuerza","lbf",4.448221615],
+["Poundal","pdl",.138254954],
+["Gramo-fuerza","gf",.00980665],
+["Kilogramo-fuerza","kgf",9.80665]
+]},
+"Energía":{base:"J",u:[
+["Joule","J",1],["Erg","erg",1e-7],["Caloría","cal",4.184],
+["Kilocaloría","kcal",4184],["BTU","BTU",1055.05585],
+["Pie-libra","ft·lbf",1.355817948],
+["Kilowatt-hora","kWh",3600000],
+["Electronvolt","eV",1.602176634e-19],
+["Megaelectronvolt","MeV",1.602176634e-13]
+]},
+"Presión":{base:"Pa",u:[
+["Pascal","Pa",1],["Atmósfera","atm",101325],
+["Bar","bar",100000],["Kilopascal","kPa",1000],
+["Megapascal","MPa",1e6],["Dina por centímetro cuadrado","dyn/cm²",.1],
+["Pulgada de agua","inH₂O",249.08891],
+["Centímetro de mercurio","cmHg",1333.22387],
+["Milímetro de mercurio","mmHg",133.322387],
+["Libra por pulgada cuadrada","psi",6894.757293],
+["Libra por pie cuadrado","lb/ft²",47.88025898],
+["Torr","Torr",101325/760]
+]},
+"Potencia":{base:"W",u:[
+["Watt","W",1],["Kilowatt","kW",1000],
+["Caballo de fuerza","hp",745.6998716],
+["Pie-libra por segundo","ft·lbf/s",1.355817948],
+["BTU por hora","BTU/h",.29307107],
+["Caloría por segundo","cal/s",4.184]
+]},
+"Flujo magnético":{base:"Wb",u:[
+["Weber","Wb",1],["Maxwell","Mx",1e-8],
+["Milliweber","mWb",.001],["Microweber","µWb",1e-6]
+]},
+"Campo magnético":{base:"T",u:[
+["Tesla","T",1],["Gauss","G",1e-4],
+["Milligauss","mG",1e-7],["Microtesla","µT",1e-6],
+["Militesla","mT",.001]
+]},
+"Ángulo plano":{base:"rad",u:[
+["Radián","rad",1],["Grado","°",Math.PI/180],
+["Minuto de arco","′",Math.PI/10800],
+["Segundo de arco","″",Math.PI/648000],
+["Revolución","rev",2*Math.PI]
+]},
+"Ángulo sólido":{base:"sr",u:[
+["Estereorradián","sr",1],["Esfera completa","esfera",4*Math.PI]
+]}
+};
+
+const $ = id => document.getElementById(id);
+let categoria = "Longitud";
+
+function formato(n){
+  if(!Number.isFinite(n)) return "Fuera de rango";
+  return n.toLocaleString("es-MX",{
+    maximumSignificantDigits:12,useGrouping:false
+  });
+}
+
+function iniciar(c){
+  categoria=c;
+  const d=D[c];
+  $("titulo").textContent="Conversión de "+c.toLowerCase();
+  $("origen").replaceChildren();
+  $("destino").replaceChildren();
+
+  d.u.forEach((u,i)=>{
+    for(const id of ["origen","destino"]){
+      const o=document.createElement("option");
+      o.value=i;
+      o.textContent=u[0]+" ("+u[1]+")";
+      $(""+id).append(o);
+    }
+  });
+
+  $("origen").selectedIndex=0;
+  $("destino").selectedIndex=Math.min(1,d.u.length-1);
+
+  document.querySelectorAll(".categorias button").forEach(b=>{
+    b.style.background=b.textContent===c?"#bcd8f6":"#e6eef8";
+  });
+  crearTabla();
+  convertir();
+}
+
+function crearTabla(){
+  const d=D[categoria];
+  $("tabla").replaceChildren();
+  d.u.forEach(u=>{
+    const tr=document.createElement("tr");
+    [u[0],u[1],formato(u[2])+" "+d.base].forEach(t=>{
+      const td=document.createElement("td");
+      td.textContent=t;
+      tr.append(td);
+    });
+    $("tabla").append(tr);
+  });
+}
+
+function convertir(){
+  if($("cantidad").value.trim()===""){
+    $("valor").textContent="Introduce una cantidad";
+    $("unidad").textContent="";
+    $("factor").textContent="—";
+    $("formula").textContent="";
+    return;
+  }
+
+  const n=Number($("cantidad").value);
+  const d=D[categoria];
+  const a=d.u[Number($("origen").value)];
+  const b=d.u[Number($("destino").value)];
+  const f=a[2]/b[2];
+  const r=n*f;
+
+  $("valor").textContent=formato(r);
+  $("unidad").textContent=b[1]+" — "+b[0];
+  $("factor").textContent=formato(f);
+  $("formula").textContent=
+    formato(n)+" "+a[1]+" × "+formato(f)+" = "+formato(r)+" "+b[1];
+}
+
+Object.keys(D).forEach(c=>{
+  const b=document.createElement("button");
+  b.textContent=c;
+  b.onclick=()=>iniciar(c);
+  $("categorias").append(b);
+});
+
+$("cantidad").addEventListener("input",convertir);
+$("origen").addEventListener("change",convertir);
+$("destino").addEventListener("change",convertir);
+$("convertir").addEventListener("click",convertir);
+
+$("swap").onclick=()=>{
+  const a=$("origen").selectedIndex;
+  $("origen").selectedIndex=$("destino").selectedIndex;
+  $("destino").selectedIndex=a;
+  convertir();
+};
+
+$("limpiar").onclick=()=>{
+  $("cantidad").value=1;
+  convertir();
+};
+
+$("copiar").onclick=async()=>{
+  const t=$("formula").textContent;
+  try{
+    await navigator.clipboard.writeText(t);
+    $("copiar").textContent="Copiado";
+    setTimeout(()=>$("copiar").textContent="Copiar resultado",1500);
+  }catch{
+    prompt("Copia el resultado:",t);
+  }
+};
+
+iniciar(categoria);
+</script>
+</body>
+</html>
